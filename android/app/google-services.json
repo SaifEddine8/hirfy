@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1070447733412",
+    "project_id": "hirfy-83699",
+    "storage_bucket": "hirfy-83699.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1070447733412:android:bd6926ef9d406e6aa0d431",
+        "android_client_info": {
+          "package_name": "com.example.hirfy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1070447733412-1fe44bpb192so34anvkm6vdt5dv2q899.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.hirfy",
+            "certificate_hash": "7f314d9efa659598695a9afbec80c7d9e05219e5"
+          }
+        },
+        {
+          "client_id": "1070447733412-9t7778g4dg7d56vjv9jr6vhkscskrmc3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADq3pNY_QGaDyNqcdJLRX3TDfELpsH0K8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1070447733412-9t7778g4dg7d56vjv9jr6vhkscskrmc3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1070447733412-mnhuir837sajskc44qld2kctuubti51r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.hirfy"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
