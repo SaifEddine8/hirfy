@@ -34,119 +34,122 @@ class _SupportScreenState extends State<SupportScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            
-
-            const Text(
-              'الأسئلة الشائعة',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              
+        
+              const Text(
+                'الأسئلة الشائعة',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.08),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  FaqItemCard(
-                    question: 'كيف يمكنني تعديل بيانات حسابي؟',
-                    answer: 'يمكنك الانتقال إلى الملف الشخصي، ثم الضغط على زر تعديل الملف الشخصي لتغيير اسمك أو رقم هاتفك.',
-                  ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  FaqItemCard(
-                    question: 'كيف أستطيع التواصل مع الحرفي؟',
-                    answer: 'عند تصفح الخدمات أو الطلبات، يظهر لك زر اتصال أو واتساب خاص بالحرفي المعني لتتمكن من التفاهم معه مباشرة.',
-                  ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  FaqItemCard(
-                    question: 'نسيت كلمة المرور، ماذا أعمل؟',
-                    answer: 'من شاشة تعديل الملف الشخصي، يمكنك الضغط على "إعادة تعيين كلمة المرور" وسيتم إرسال رابط التغيير لبريدك الإلكتروني فوراً.',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            const Text(
-              'أرسل لنا رسالة',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.08),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Form(
-                key: _formKey,
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.08),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
                 child: Column(
                   children: [
-                    TextFormFieldWidget(
-                      controller: _messageController,
-                      hint: 'اكتب مشكلتك أو استفسارك بالتفصيل...',
-                      lable: 'رسالة الدعم',
-                      validator: (value) => value == null || value.trim().isEmpty
-                          ? 'الرجاء كتابة رسالة قبل الإرسال'
-                          : null,
+                    FaqItemCard(
+                      question: 'كيف يمكنني تعديل بيانات حسابي؟',
+                      answer: 'يمكنك الانتقال إلى الملف الشخصي، ثم الضغط على زر تعديل الملف الشخصي لتغيير اسمك أو رقم هاتفك.',
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ConstantStyles.buttonStyle,
-                        onPressed: () async{
-                                if (_formKey.currentState!.validate()) {
-                                  setState(() => _isLoading = !_isLoading);
-                                  await _sendEmailDirectly(context,_messageController.text.trim());
-                                  if(!context.mounted)return;
-                                  setState(() => _isLoading = !_isLoading);
-                                    _messageController.clear();
-                                  
-                                }
-                              },
-                        child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            :  Text(
-                                'إرسال الرسالة',
-                                style: ConstantStyles.buttonTextStyle
-                              ),
-                      ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    FaqItemCard(
+                      question: 'كيف أستطيع التواصل مع الحرفي؟',
+                      answer: 'عند تصفح الخدمات أو الطلبات، يظهر لك زر اتصال أو واتساب خاص بالحرفي المعني لتتمكن من التفاهم معه مباشرة.',
+                    ),
+                    const Divider(height: 1, indent: 16, endIndent: 16),
+                    FaqItemCard(
+                      question: 'نسيت كلمة المرور، ماذا أعمل؟',
+                      answer: 'من شاشة تعديل الملف الشخصي، يمكنك الضغط على "إعادة تعيين كلمة المرور" وسيتم إرسال رابط التغيير لبريدك الإلكتروني فوراً.',
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 30),
+        
+              const Text(
+                'أرسل لنا رسالة',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.08),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormFieldWidget(
+                        controller: _messageController,
+                        hint: 'اكتب مشكلتك أو استفسارك بالتفصيل...',
+                        lable: 'رسالة الدعم',
+                        validator: (value) => value == null || value.trim().isEmpty
+                            ? 'الرجاء كتابة رسالة قبل الإرسال'
+                            : null,
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ConstantStyles.buttonStyle,
+                          onPressed: () async{
+                                  if (_formKey.currentState!.validate()) {
+                                    setState(() => _isLoading = !_isLoading);
+                                    await _sendEmailDirectly(context,_messageController.text.trim());
+                                    if(!context.mounted)return;
+                                    setState(() => _isLoading = !_isLoading);
+                                      _messageController.clear();
+                                    
+                                  }
+                                },
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              :  Text(
+                                  'إرسال الرسالة',
+                                  style: ConstantStyles.buttonTextStyle
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

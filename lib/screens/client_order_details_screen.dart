@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:hirfy/models/notification_model.dart';
 import 'package:hirfy/widgets/rating_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -11,7 +12,91 @@ class ClientOrderDetailsScreen extends StatelessWidget {
     Key? key,
     required this.orderId,
   }) : super(key: key);
+  Future<void> _cancelOrder({
+  required BuildContext context,
+  required String clientId,
+  required String craftsmanId,
+  required String orderId,
+}) async {
+  final scaffoldMessenger = ScaffoldMessenger.of(context);
+  
+  final bool? confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('إلغاء الطلب'),
+      content: const Text('هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('تراجع'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          child: const Text('إلغاء الطلب'),
+        ),
+      ],
+    ),
+  );
 
+  if (confirm != true) return;
+
+  try {
+    WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    final orderRef = FirebaseFirestore.instance.collection('orders').doc(orderId);
+    final clientReqRef = FirebaseFirestore.instance
+        .collection('usersCollection')
+        .doc(clientId)
+        .collection('my_requests')
+        .doc(orderId);
+    final craftsmanRecRef = FirebaseFirestore.instance
+        .collection('usersCollection')
+        .doc(craftsmanId)
+        .collection('received_orders')
+        .doc(orderId);
+
+    final cancelData = {
+      'status': 'ملغي',
+      'is_cancelled': true,
+    };
+
+    batch.update(orderRef, cancelData);
+    batch.update(clientReqRef, cancelData);
+    batch.update(craftsmanRecRef, cancelData);
+
+    final notifRef = FirebaseFirestore.instance
+        .collection('usersCollection')
+        .doc(craftsmanId)
+        .collection('notifications')
+        .doc();
+      NotificationModel cancelNotification = NotificationModel(
+      id: notifRef.id,
+      title: 'تم إلغاء الطلب ',
+      body: 'قام الزبون بإلغاء طلب الخدمة المرتبط بهذا الطلب.',
+      type: 'order_cancelled', 
+      relatedId: orderId,       
+      isRead: false,
+      createdAt: null,          
+    );
+    batch.set(notifRef, cancelNotification.toMap());
+    await batch.commit();
+
+    scaffoldMessenger.showSnackBar(
+      const SnackBar(
+        content: Text('تم إلغاء الطلب بنجاح'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+    
+    // العودة للشاشة السابقة بعد الإلغاء
+    Navigator.pop(context);
+  } catch (e) {
+    scaffoldMessenger.showSnackBar(
+      SnackBar(content: Text('حدث خطأ أثناء إلغاء الطلب: $e'), backgroundColor: Colors.red),
+    );
+  }
+}
   Future<void> _makePhoneCall(String phoneNumber, BuildContext context) async {
     final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
     if (await canLaunchUrl(launchUri)) {
@@ -179,242 +264,266 @@ class ClientOrderDetailsScreen extends StatelessWidget {
             centerTitle: true,
             elevation: 0,
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. بطاقة العنوان والحالة
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade800, Colors.blue.shade500],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
+          body: Directionality(
+            textDirection: TextDirection.rtl,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. بطاقة العنوان والحالة
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.blue.shade800, Colors.blue.shade500],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Icon(Icons.handyman, color: Colors.white, size: 32),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              status,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Icon(Icons.handyman, color: Colors.white, size: 32),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
                               ),
+                              child: Text(
+                                status,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'الحرفي',
+                          style: const TextStyle(color: Colors.white70, fontSize: 14),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          craftsmanName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+            
+                  const Text(
+                    'معلومات التواصل مع الحرفي',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 8),
+            
+                  // 2. رقم هاتف الحرفي
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.phone, color: Colors.green),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('رقم الحرفي', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  craftsmanPhone.isNotEmpty ? craftsmanPhone : 'لا يوجد رقم',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'الحرفي',
-                        style: const TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        craftsmanName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'معلومات التواصل مع الحرفي',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-                const SizedBox(height: 8),
-
-                // 2. رقم هاتف الحرفي
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.phone, color: Colors.green),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
+                  const SizedBox(height: 20),
+            
+                  const Text(
+                    'تفاصيل موقعك وملاحظاتك',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 8),
+            
+                  // 3. الموقع والملاحظات
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('رقم الحرفي', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                              const SizedBox(height: 2),
-                              Text(
-                                craftsmanPhone.isNotEmpty ? craftsmanPhone : 'لا يوجد رقم',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              const Icon(Icons.location_on, color: Colors.redAccent, size: 24),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('الموقع', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      location,
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                const Text(
-                  'تفاصيل موقعك وملاحظاتك',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
-                ),
-                const SizedBox(height: 8),
-
-                // 3. الموقع والملاحظات
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.location_on, color: Colors.redAccent, size: 24),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('الموقع', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    location,
-                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 24),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.note_alt, color: Colors.orangeAccent, size: 24),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('الملاحظات', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    notes.isNotEmpty ? notes : 'لا توجد ملاحظات إضافية.',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: notes.isNotEmpty ? Colors.black87 : Colors.grey,
+                          const Divider(height: 24),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.note_alt, color: Colors.orangeAccent, size: 24),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('الملاحظات', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      notes.isNotEmpty ? notes : 'لا توجد ملاحظات إضافية.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: notes.isNotEmpty ? Colors.black87 : Colors.grey,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 24),
-
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('السعر ونوع الاحتساب', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    priceValue != null
-                                        ? '$priceValue دينار ($priceType)'
-                                        : 'يُحدد بعد المعاينة (لم يُحدد بعد)',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                      color: priceValue != null ? Colors.green.shade700 : Colors.orange.shade800,
+                            ],
+                          ),
+                          const Divider(height: 24),
+            
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('السعر ونوع الاحتساب', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      priceValue != null
+                                          ? '$priceValue دينار ($priceType)'
+                                          : 'يُحدد بعد المعاينة (لم يُحدد بعد)',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: priceValue != null ? Colors.green.shade700 : Colors.orange.shade800,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: craftsmanPhone.isNotEmpty
-                            ? () => _makePhoneCall(craftsmanPhone, context)
-                            : null,
-                        icon: const Icon(Icons.call, color: Colors.white),
-                        label: const Text('اتصال', style: TextStyle(color: Colors.white, fontSize: 15)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: craftsmanPhone.isNotEmpty
-                            ? () => _openWhatsApp(craftsmanPhone, context)
-                            : null,
-                        icon: const Icon(Icons.chat, color: Colors.white),
-                        label: const Text('واتساب', style: TextStyle(color: Colors.white, fontSize: 15)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
+                  ),
+                  if (status == 'قيد الانتظار') ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _cancelOrder(
+                          context: context,
+                          clientId: currentUser.uid,
+                          craftsmanId: craftsmanId,
+                          orderId: orderId,
+                        ),
+                        icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+                        label: const Text('إلغاء الطلب', style: TextStyle(color: Colors.red, fontSize: 15)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.red),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 40),
-              ],
+                  const SizedBox(height: 24),
+            
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: craftsmanPhone.isNotEmpty
+                              ? () => _makePhoneCall(craftsmanPhone, context)
+                              : null,
+                          icon: const Icon(Icons.call, color: Colors.white),
+                          label: const Text('اتصال', style: TextStyle(color: Colors.white, fontSize: 15)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: craftsmanPhone.isNotEmpty
+                              ? () => _openWhatsApp(craftsmanPhone, context)
+                              : null,
+                          icon: const Icon(Icons.chat, color: Colors.white),
+                          label: const Text('واتساب', style: TextStyle(color: Colors.white, fontSize: 15)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           ),
 

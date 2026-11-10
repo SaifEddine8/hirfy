@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:hirfy/models/notification_model.dart';
 import 'package:hirfy/widgets/received_orders_card.dart';
 
 class ReceivedOrdersScreen extends StatelessWidget {
@@ -112,7 +113,23 @@ class ReceivedOrdersScreen extends StatelessWidget {
         batch.delete(clientReqRef);
         batch.delete(craftsmanRecRef);
       }
-
+      final notifRef = FirebaseFirestore.instance
+        .collection('usersCollection')
+        .doc(clientId)
+        .collection('notifications')
+        .doc();
+      NotificationModel actionNotification = NotificationModel(
+      id: notifRef.id,
+      title: isAccepted ? 'تم قبول طلبك ' : 'اعتذار عن الطلب ',
+      body: isAccepted 
+          ? 'وافق الحرفي على طلبك، وهو الآن قيد التنفيذ.' 
+          : 'نأسف، لقد اعتذر الحرفي عن تنفيذ طلبك.',
+      type: isAccepted ? 'order_accepted' : 'order_rejected', 
+      relatedId: orderId,
+      isRead: false,
+      createdAt: null, 
+    );
+    batch.set(notifRef, actionNotification.toMap());
       await batch.commit();
 
       scaffoldMessenger.showSnackBar(
