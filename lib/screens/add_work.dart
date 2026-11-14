@@ -311,7 +311,7 @@ final storageRef = Supabase.instance.client.storage;
                     onPressed: () async{
                       
                       if (_formKey.currentState!.validate()) {
-                        if(_selectedImage==null)
+                      try{  if(_selectedImage==null)
                         {
                           ScaffoldMessenger.of(context)
                           .showSnackBar(SnackBar(content: Text('الرجاءادخال صوره لاعمال سابقه لك')));
@@ -341,13 +341,19 @@ final storageRef = Supabase.instance.client.storage;
                           setState(() {
                             isLoading=!isLoading;
                           });
-                      }
-                      _titleController.clear();
+                          _titleController.clear();
                       _descriptionController.clear();
                       _priceController.clear();
                       _locationController.clear();
                       _phoneNumberController.clear();
                       _selectedImage=null;
+                      }
+                      catch(e){
+                        ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('حدث خطأ أثناء إضافة الخدمة')));
+                      }
+                      }
+                      
                     },
                     style: ConstantStyles.buttonStyle,
                     child: isLoading?CircularProgressIndicator(color: Colors.white,): Text(

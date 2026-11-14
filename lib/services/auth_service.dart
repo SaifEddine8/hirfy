@@ -133,12 +133,12 @@ class AuthService {
   }
 
 
-  static Future<void> resendPassword(String email){
+  static Future<void> resendPassword(String email)async{
     try{
-      return FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      return await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
 
     }on FirebaseAuthException catch(e){
-      switch(e){
+      switch(e.code){
         case 'invalid-email':
         throw AuthException(mas: 'invalid email');
 
